@@ -80,21 +80,22 @@ export default function EconomicDashboard() {
     fetchData()
   }, [])
 
-  const parseCSV = (csvText: string): EconomicData[] => {
-    const lines = csvText.split('\n')
-    const headers = lines[0].split(',')
-    return lines.slice(1).map(line => {
-      const values = line.split(',')
-      return headers.reduce((obj: any, header, index) => {
-        let value = values[index]?.trim() || ''
-        if (header === "IPCA Inflation Rate (% Annual Variation)") {
-          value = parseFloat(value) || 0
-        }
+const parseCSV = (csvText: string): EconomicData[] => {
+  const lines = csvText.split('\n')
+  const headers = lines[0].split(',')
+  return lines.slice(1).map(line => {
+    const values = line.split(',')
+    return headers.reduce((obj: any, header, index) => {
+      let value = values[index]?.trim() || ''
+      if (header === "IPCA Inflation Rate (% Annual Variation)") {
+        obj[header.trim()] = parseFloat(value) || 0
+      } else {
         obj[header.trim()] = value
-        return obj
-      }, {}) as EconomicData
-    }).filter(item => item.Year && item.Presidents)
-  }
+      }
+      return obj
+    }, {}) as EconomicData
+  }).filter(item => item.Year && item.Presidents)
+}
 
   const handleDataPointToggle = (dataPoint: DataPoint) => {
     setSelectedDataPoints(prev => 
