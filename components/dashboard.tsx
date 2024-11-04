@@ -62,7 +62,7 @@ export default function EconomicDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://your-csv-url.com');
+        const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dashboard%20-%20Dataset-DFESrHLMJazIEsEc2AqvZIIFM1nfBG.csv');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
