@@ -1,17 +1,15 @@
 'use client'
 
-import { ChartTooltipProps, TooltipProps } from 'recharts'
+import { TooltipProps } from 'recharts'
 import { Card } from '@/components/ui/card'
 
-export function ChartContainer({
-  children,
-  config,
-  className,
-}: {
+interface ChartProps {
   children: React.ReactNode
   config: Record<string, { label: string; color: string }>
   className?: string
-}) {
+}
+
+export function ChartContainer({ children, config, className }: ChartProps) {
   return <div className={className}>{children}</div>
 }
 
@@ -33,6 +31,6 @@ export function ChartTooltip({
   )
 }
 
-export function ChartTooltipContent(props: ChartTooltipProps<number, string>) {
+export function ChartTooltipContent(props: TooltipProps<number, string>) {
   return <ChartTooltip {...props} />
 }
