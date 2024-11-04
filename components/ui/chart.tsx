@@ -1,6 +1,6 @@
 'use client'
 
-import { TooltipProps } from 'recharts'
+import type { TooltipProps } from 'recharts'
 import { Card } from '@/components/ui/card'
 
 interface ChartProps {
@@ -13,11 +13,13 @@ export function ChartContainer({ children, config, className }: ChartProps) {
   return <div className={className}>{children}</div>
 }
 
+type CustomTooltipProps = TooltipProps<number, string>
+
 export function ChartTooltip({
   active,
   payload,
   label,
-}: TooltipProps<number, string>) {
+}: CustomTooltipProps) {
   if (!active || !payload) return null
   return (
     <Card className="p-2 shadow-sm">
@@ -31,6 +33,6 @@ export function ChartTooltip({
   )
 }
 
-export function ChartTooltipContent(props: TooltipProps<number, string>) {
+export function ChartTooltipContent(props: CustomTooltipProps) {
   return <ChartTooltip {...props} />
 }
