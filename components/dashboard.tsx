@@ -15,10 +15,10 @@ interface EconomicData {
   "Growth rate from a Real GDP": string;
   "Nominal GDP per Capita (in R$)": string;
   "Growth rate from a Real GDP per capita": string;
-  "Exchange Rate (January, R$/USD)": string;
-  "Exchange Rate (January, /R$USD) growth": string;
-  "Foreign Direct Investment (IED, in Billions of R$)": string;
-  "Foreign Portfolio Investment (USD millions) in the 4th quarter": string;
+  "Exchange Rate (January,R$/USD)": number;
+  "Exchange Rate (January,/R$USD) growth": string;
+  "Foreign Direct Investment (IED,in Billions of R$)": string;
+  "Foreign Portfolio Investment (USD millions) in the 4th quarter": number;
   "Trade Balance Surplus Growth Rate": string;
   "IPCA Inflation Rate (% Annual Variation)": number;
   "Annual Average Unemployment Rate (%)": string;
@@ -37,9 +37,9 @@ const dataPoints: DataPoint[] = [
   { name: "Growth rate from a Real GDP", index: 1 },
   { name: "Nominal GDP per Capita (in R$)", index: 2 },
   { name: "Growth rate from a Real GDP per capita", index: 3 },
-  { name: "Exchange Rate (January, R$/USD)", index: 4 },
-  { name: "Exchange Rate (January, /R$USD) growth", index: 5 },
-  { name: "Foreign Direct Investment (IED, in Billions of R$)", index: 6 },
+  { name: "Exchange Rate (January,R$/USD)", index: 4 },
+  { name: "Exchange Rate (January,/R$USD) growth", index: 5 },
+  { name: "Foreign Direct Investment (IED,in Billions of R$)", index: 6 },
   { name: "Foreign Portfolio Investment (USD millions) in the 4th quarter", index: 7 },
   { name: "Trade Balance Surplus Growth Rate", index: 8 },
   { name: "IPCA Inflation Rate (% Annual Variation)", index: 9 },
@@ -62,7 +62,7 @@ export default function EconomicDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dashboard%20-%20Brazilian%20Economic%20Data%20between%201994%20-%202022%20-%20x-h8KUpsNi3pETVIs35dWT7sb9sq0PzA.csv')
+        const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dashboard%20-%20Dataset-DFESrHLMJazIEsEc2AqvZIIFM1nfBG.csv')
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
@@ -80,22 +80,30 @@ export default function EconomicDashboard() {
     fetchData()
   }, [])
 
-const parseCSV = (csvText: string): EconomicData[] => {
-  const lines = csvText.split('\n')
-  const headers = lines[0].split(',')
-  return lines.slice(1).map(line => {
-    const values = line.split(',')
-    return headers.reduce((obj: any, header, index) => {
-      let value = values[index]?.trim() || ''
-      if (header === "IPCA Inflation Rate (% Annual Variation)") {
-        obj[header.trim()] = parseFloat(value) || 0
-      } else {
-        obj[header.trim()] = value
-      }
-      return obj
-    }, {}) as EconomicData
-  }).filter(item => item.Year && item.Presidents)
-}
+  const parseCSV = (csvText: string): EconomicData[] => {
+    const lines = csvText.split('\n')
+    const headers = lines[0].split(',')
+    return lines.slice(1).map(line => {
+      const values = line.split(',')
+      return headers.reduce((obj: any, header, index) => {
+        let value = values[index]?.trim() || ''
+        if (header === "Exchange Rate (January,R$/USD)" || 
+            header === "Foreign Portfolio Investment (USD millions) in the 4th quarter" ||
+            header === "IPCA Inflation Rate (% Annual Variation)") {
+          obj[header.trim()] = parseFloat(value) || 0
+        } else if (header === "Exchange Rate (January,/R$USD) growth" ||
+                   header === "Foreign Direct Investment (IED,in Billions of R$)" ||
+                   header === "Minimum Wage (in R$)" ||
+                   header === "Minimum Wage Growth Rate percentage" ||
+                   header === "Yearly Cost of Living Index (ICV)(Avg. % Change)") {
+          obj[header.trim()] = parseFloat(value.replace(',', '.')) || 0
+        } else {
+          obj[header.trim()] = value
+        }
+        return obj
+      }, {}) as EconomicData
+    }).filter(item => item.Year && item.Presidents)
+  }
 
   const handleDataPointToggle = (dataPoint: DataPoint) => {
     setSelectedDataPoints(prev => 
@@ -123,8 +131,9 @@ const parseCSV = (csvText: string): EconomicData[] => {
     )
   }
 
-  const years = [...new Set(economicData.map(item => item.Year))].sort((a, b) => parseInt(b) - parseInt(a))
-  const presidents = [...new Set(economicData.map(item => item.Presidents))]
+  const years = Array.from(new Set(economicData.map(item => item.Year)))
+    .sort((a, b) => parseInt(b) - parseInt(a))
+  const presidents = Array.from(new Set(economicData.map(item => item.Presidents)))
 
   const filteredData = economicData.filter(item => {
     const yearMatch = !selectedYear || selectedYear === 'all' || item.Year === selectedYear
@@ -136,19 +145,19 @@ const parseCSV = (csvText: string): EconomicData[] => {
     return data.map(item => ({
       ...item,
       "Nominal GDP (in Millions of R$)": parseFloat(item["Nominal GDP (in Millions of R$)"]?.replace(/\s/g, '').replace(',', '.') || '0') / 1000, // Convert to billions
-      "Growth rate from a Real GDP": parseFloat(item["Growth rate from a Real GDP"] || '0'),
+      "Growth rate from a Real GDP": parseFloat(item["Growth rate from a Real GDP"]?.replace(',', '.') || '0'),
       "Nominal GDP per Capita (in R$)": parseFloat(item["Nominal GDP per Capita (in R$)"]?.replace(/\s/g, '').replace(',', '.') || '0'),
-      "Growth rate from a Real GDP per capita": parseFloat(item["Growth rate from a Real GDP per capita"] || '0'),
-      "Exchange Rate (January, R$/USD)": parseFloat(item["Exchange Rate (January, R$/USD)"]?.replace(',', '.') || '0'),
-      "Exchange Rate (January, /R$USD) growth": parseFloat(item["Exchange Rate (January, /R$USD) growth"]?.replace(',', '.') || '0'),
-      "Foreign Direct Investment (IED, in Billions of R$)": parseFloat(item["Foreign Direct Investment (IED, in Billions of R$)"]?.replace(',', '.') || '0'),
-      "Foreign Portfolio Investment (USD millions) in the 4th quarter": parseFloat(item["Foreign Portfolio Investment (USD millions) in the 4th quarter"]?.replace(/\s/g, '').replace(',', '.') || '0'),
+      "Growth rate from a Real GDP per capita": parseFloat(item["Growth rate from a Real GDP per capita"]?.replace(',', '.') || '0'),
+      "Exchange Rate (January,R$/USD)": item["Exchange Rate (January,R$/USD)"],
+      "Exchange Rate (January,/R$USD) growth": parseFloat(item["Exchange Rate (January,/R$USD) growth"]?.toString() || '0'),
+      "Foreign Direct Investment (IED,in Billions of R$)": parseFloat(item["Foreign Direct Investment (IED,in Billions of R$)"]?.toString() || '0'),
+      "Foreign Portfolio Investment (USD millions) in the 4th quarter": item["Foreign Portfolio Investment (USD millions) in the 4th quarter"],
       "Trade Balance Surplus Growth Rate": parseFloat(item["Trade Balance Surplus Growth Rate"]?.replace(',', '.') || '0'),
-      "IPCA Inflation Rate (% Annual Variation)": item["IPCA Inflation Rate (% Annual Variation)"] || 0,
+      "IPCA Inflation Rate (% Annual Variation)": item["IPCA Inflation Rate (% Annual Variation)"],
       "Annual Average Unemployment Rate (%)": parseFloat(item["Annual Average Unemployment Rate (%)"]?.replace(',', '.') || '0'),
-      "Minimum Wage (in R$)": parseFloat(item["Minimum Wage (in R$)"]?.replace(/\./g, '').replace(',', '.') || '0'),
-      "Minimum Wage Growth Rate percentage": parseFloat(item["Minimum Wage Growth Rate percentage"]?.replace(',', '.') || '0'),
-      "Yearly Cost of Living Index (ICV)(Avg. % Change)": parseFloat(item["Yearly Cost of Living Index (ICV)(Avg. % Change)"]?.replace(',', '.') || '0')
+      "Minimum Wage (in R$)": parseFloat(item["Minimum Wage (in R$)"]?.toString() || '0'),
+      "Minimum Wage Growth Rate percentage": parseFloat(item["Minimum Wage Growth Rate percentage"]?.toString() || '0'),
+      "Yearly Cost of Living Index (ICV)(Avg. % Change)": parseFloat(item["Yearly Cost of Living Index (ICV)(Avg. % Change)"]?.toString() || '0')
     }))
   }
 
@@ -222,17 +231,21 @@ const parseCSV = (csvText: string): EconomicData[] => {
           "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(60, 70%, 50%)" }
         }, 'line')}
         {renderChart("Exchange Rate vs Trade Balance Surplus Growth", {
-          "Exchange Rate (January, R$/USD)": { label: "Exchange Rate", color: "hsl(300, 70%, 50%)" },
+          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(300, 70%, 50%)" },
           "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(180, 70%, 50%)" }
         }, 'line')}
         {renderChart("Foreign Direct Investment vs Nominal GDP", {
           "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(90, 70%, 50%)" },
-          "Foreign Direct Investment (IED, in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(30, 70%, 50%)" }
+          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(30, 70%, 50%)" }
         }, 'scatter')}
         {renderChart("Unemployment Rate vs Minimum Wage", {
           "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(210, 70%, 50%)" },
           "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(150, 70%, 50%)" }
         }, 'scatter')}
+        {renderChart("Exchange Rate Growth vs Cost of Living", {
+          "Exchange Rate (January,/R$USD) growth": { label: "Exchange Rate Growth", color: "hsl(270, 70%, 50%)" },
+          "Yearly Cost of Living Index (ICV)(Avg. % Change)": { label: "Cost of Living Change", color: "hsl(330, 70%, 50%)" }
+        }, 'line')}
       </div>
     )
   }
@@ -256,7 +269,7 @@ const parseCSV = (csvText: string): EconomicData[] => {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6 shadow-md">
-        <h1 className="text-3xl font-bold text-white text-center">Brazilian Economic Data between 1994 - 2022</h1>
+        <h1 className="text-3xl font-bold text-white text-center">Brazilian Economic Data between  1994 - 2022</h1>
       </div>
       <div className="container mx-auto p-4">
         <Card className="w-full max-w-6xl mx-auto">
@@ -347,7 +360,16 @@ const parseCSV = (csvText: string): EconomicData[] => {
                             <td className="border border-gray-300 p-2">{item.Presidents}</td>
                             {selectedDataPoints.map(dataPoint => (
                               <td key={dataPoint.name} className="border border-gray-300 p-2">
-                                {item[dataPoint.name as keyof EconomicData] || 'N/A'}
+                                {(() => {
+                                  const value = item[dataPoint.name as keyof EconomicData];
+                                  if (typeof value === 'number') {
+                                    return value.toFixed(2);
+                                  } else if (typeof value === 'string' && !isNaN(parseFloat(value))) {
+                                    return parseFloat(value).toFixed(2);
+                                  } else {
+                                    return value || 'N/A';
+                                  }
+                                })()}
                               </td>
                             ))}
                           </tr>
