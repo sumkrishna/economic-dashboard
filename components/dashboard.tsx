@@ -127,7 +127,8 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
           item["IPCA Inflation Rate (% Annual Variation)"] !== undefined ||
           item["Minimum Wage Growth Rate percentage"] !== undefined ||
           item["Growth rate from a Real GDP per capita"] !== undefined ||
-          item["Trade Balance Surplus Growth Rate"] !== undefined
+          item["Trade Balance Surplus Growth Rate"] !== undefined ||
+          item["Exchange Rate (January,/R$USD) growth"] !== undefined
         )
       );
     })
