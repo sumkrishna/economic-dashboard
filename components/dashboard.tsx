@@ -13,16 +13,16 @@ interface EconomicData {
   Year: string;
   "Nominal GDP (in Millions of R$)": number;
   "Growth rate from a Real GDP": number;
-  "Nominal GDP per Capita (in R$)": number;
+  "Nominal GDP per Capita (in R$)": string;
   "Growth rate from a Real GDP per capita": number;
   "Exchange Rate (January,R$/USD)": number;
   "Exchange Rate (January,/R$USD) growth": number;
   "Foreign Direct Investment (IED,in Billions of R$)": number;
   "Foreign Portfolio Investment (USD millions) in the 4th quarter": number;
-  "Trade Balance Surplus Growth Rate": number;
+  "Trade Balance Surplus Growth Rate": string;
   "IPCA Inflation Rate (% Annual Variation)": number;
   "Annual Average Unemployment Rate (%)": number;
-  "Minimum Wage (in R$)": number;
+  "Minimum Wage (in R$)": string;
   "Minimum Wage Growth Rate percentage": number;
   "Yearly Cost of Living Index (ICV)(Avg. % Change)": number;
 }
@@ -62,7 +62,7 @@ export default function EconomicDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/economic-data') // Assume this endpoint returns JSON data
+        const response = await fetch('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Dashboard-BdBYHcDrNjdqjW431nlwnj7DIeQ7m9.json')
         if (!response.ok) {
           throw new Error('Failed to fetch data')
         }
@@ -115,7 +115,19 @@ export default function EconomicDashboard() {
     return yearMatch && presidentMatch
   })
 
+  const prepareChartData = (data: EconomicData[]) => {
+    return data.map(item => ({
+      ...item,
+      "Nominal GDP (in Millions of R$)": item["Nominal GDP (in Millions of R$)"] / 1000, // Convert to billions
+      "Nominal GDP per Capita (in R$)": parseFloat(item["Nominal GDP per Capita (in R$)"].replace(/\s/g, '')),
+      "Trade Balance Surplus Growth Rate": parseFloat(item["Trade Balance Surplus Growth Rate"].replace(',', '.')),
+      "Minimum Wage (in R$)": parseFloat(item["Minimum Wage (in R$)"].replace('.', '').replace(',', '.'))
+    }))
+  }
+
   const renderComparativeGraphs = () => {
+    const chartData = prepareChartData(economicData)
+
     const renderChart = (title: string, config: Record<string, { label: string; color: string }>, chartType: 'line' | 'scatter') => {
       const dataKeys = Object.keys(config);
       if (dataKeys.length === 0) return null;
@@ -140,7 +152,7 @@ export default function EconomicDashboard() {
             >
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === 'line' ? (
-                  <LineChart data={economicData}>
+                  <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="Year" />
                     <YAxis />
@@ -162,7 +174,7 @@ export default function EconomicDashboard() {
                     <XAxis dataKey={dataKeys[0]} name={config[dataKeys[0]]?.label || dataKeys[0]} />
                     <YAxis dataKey={dataKeys[1]} name={config[dataKeys[1]]?.label || dataKeys[1]} />
                     <ChartTooltip cursor={{ strokeDasharray: '3 3' }} content={<ChartTooltipContent />} />
-                    <Scatter name={title} data={economicData} fill={config[dataKeys[0]]?.color || `hsl(${Math.random() * 360}, 70%, 50%)`} />
+                    <Scatter name={title} data={chartData} fill={config[dataKeys[0]]?.color || `hsl(${Math.random() * 360}, 70%, 50%)`} />
                   </ScatterChart>
                 )}
               </ResponsiveContainer>
@@ -272,8 +284,8 @@ export default function EconomicDashboard() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Presidents</SelectItem>
-                      {presidents.map(president =>   (
-                        <SelectItem key={president} value={president}>{president}</SelectItem>
+                      {presidents.map(president => (
+                        <SelectItem key={president}    value={president}>{president}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -312,7 +324,7 @@ export default function EconomicDashboard() {
                             <td className="border border-gray-300 p-2">{item.Presidents}</td>
                             {selectedDataPoints.map(dataPoint => (
                               <td key={dataPoint.name} className="border border-gray-300 p-2">
-                                {item[dataPoint.name as keyof EconomicData]?.toFixed(2) || 'N/A'}
+                                {item[dataPoint.name as keyof EconomicData]?.toString() || 'N/A'}
                               </td>
                             ))}
                           </tr>
@@ -366,7 +378,7 @@ export default function EconomicDashboard() {
                         className="h-[300px]"
                       >
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={economicData}>
+                          <LineChart data={prepareChartData(economicData)}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="Year" />
                             <YAxis />
