@@ -126,7 +126,9 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
           item["Growth rate from a Real GDP"] !== undefined ||
           item["IPCA Inflation Rate (% Annual Variation)"] !== undefined ||
           item["Minimum Wage Growth Rate percentage"] !== undefined ||
-          item["Growth rate from a Real GDP per capita"] !== undefined
+          item["Growth rate from a Real GDP per capita"] !== undefined ||
+          item["Trade Balance Surplus Growth Rate"] !== undefined ||
+          item["Exchange Rate (January,/R$USD) growth"] !== undefined 
         )
       );
     })
@@ -141,7 +143,13 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
         : item["Trade Balance Surplus Growth Rate"],
       "Minimum Wage (in R$)": typeof item["Minimum Wage (in R$)"] === 'string'
         ? parseFloat(item["Minimum Wage (in R$)"].replace(/\s/g, '').replace('.', '').replace(',', '.'))
-        : item["Minimum Wage (in R$)"]
+        : item["Minimum Wage (in R$)"],
+      "Trade Balance Surplus Growth Rate": typeof item["Trade Balance Surplus Growth Rate"] === 'string'
+        ? parseFloat(item["Trade Balance Surplus Growth Rate"].replace(/\s/g, '').replace('.', '').replace(',', '.'))
+        : item["Trade Balance Surplus Growth Rate"],
+      "Exchange Rate (January,/R$USD) growth": typeof item["Exchange Rate (January,/R$USD) growth"] === 'string'
+        ? parseFloat(item["Exchange Rate (January,/R$USD) growth"].replace(/\s/g, '').replace('.', '').replace(',', '.'))
+        : item["Exchange Rate (January,/R$USD) growth"]
     }))
 }
 
