@@ -13,16 +13,16 @@ interface EconomicData {
   Year: string;
   "Nominal GDP (in Millions of R$)": number;
   "Growth rate from a Real GDP": number;
-  "Nominal GDP per Capita (in R$)": string;
+  "Nominal GDP per Capita (in R$)": string | number;
   "Growth rate from a Real GDP per capita": number;
   "Exchange Rate (January,R$/USD)": number;
   "Exchange Rate (January,/R$USD) growth": number;
   "Foreign Direct Investment (IED,in Billions of R$)": number;
   "Foreign Portfolio Investment (USD millions) in the 4th quarter": number;
-  "Trade Balance Surplus Growth Rate": string;
+  "Trade Balance Surplus Growth Rate": string | number;
   "IPCA Inflation Rate (% Annual Variation)": number;
   "Annual Average Unemployment Rate (%)": number;
-  "Minimum Wage (in R$)": string;
+  "Minimum Wage (in R$)": string | number;
   "Minimum Wage Growth Rate percentage": number;
   "Yearly Cost of Living Index (ICV)(Avg. % Change)": number;
 }
@@ -115,22 +115,49 @@ export default function EconomicDashboard() {
     return yearMatch && presidentMatch
   })
 
-  const prepareChartData = (data: EconomicData[]) => {
-    return data.map(item => ({
-      ...item,
-      "Nominal GDP (in Millions of R$)": item["Nominal GDP (in Millions of R$)"] / 1000, // Convert to billions
-      "Nominal GDP per Capita (in R$)": parseFloat(item["Nominal GDP per Capita (in R$)"].replace(/\s/g, '')),
-      "Trade Balance Surplus Growth Rate": parseFloat(item["Trade Balance Surplus Growth Rate"].replace(',', '.')),
-      "Minimum Wage (in R$)": parseFloat(item["Minimum Wage (in R$)"].replace('.', '').replace(',', '.'))
-    }))
+  const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false) => {
+    return data
+      .filter(item => {
+        if (!removeOutliers) return true;
+        const year = parseInt(item.Year);
+        if (removeOutliers) {
+            if (graphName === "GDP Growth Rates") {
+              if ((year === 1994 || year === 1995) && ["Growth rate from a Real GDP", "Growth rate from a Real GDP per capita"].includes(item.Year)) {
+                return false;
+            }
+          } else if (graphName === "Inflation Rate vs Minimum Wage Growth") {
+              if ((year === 1994 || year === 1995) && ["IPCA Inflation Rate (% Annual Variation)", "Minimum Wage Growth Rate percentage"].includes(item.Year)) {
+                return false;
+              }
+        }
+        // Add similar conditions for each specific graph as needed
+      }
+      
+      return true; // Only include data from 1996 onwards
+      })
+      .map(item => ({
+        ...item,
+        "Nominal GDP (in Millions of R$)": item["Nominal GDP (in Millions of R$)"] / 1000,
+        "Nominal GDP per Capita (in R$)": typeof item["Nominal GDP per Capita (in R$)"] === 'string' 
+          ? parseFloat(item["Nominal GDP per Capita (in R$)"].replace(/\s/g, '').replace(',', '.'))
+          : item["Nominal GDP per Capita (in R$)"],
+        "Trade Balance Surplus Growth Rate": typeof item["Trade Balance Surplus Growth Rate"] === 'string'
+          ? parseFloat(item["Trade Balance Surplus Growth Rate"].replace(',', '.'))
+          : item["Trade Balance Surplus Growth Rate"],
+        "Minimum Wage (in R$)": typeof item["Minimum Wage (in R$)"] === 'string'
+          ? parseFloat(item["Minimum Wage (in R$)"].replace(/\s/g, '').replace('.', '').replace(',', '.'))
+          : item["Minimum Wage (in R$)"]
+      }))
   }
 
   const renderComparativeGraphs = () => {
     const chartData = prepareChartData(economicData)
 
-    const renderChart = (title: string, config: Record<string, { label: string; color: string }>, chartType: 'line' | 'scatter') => {
+    const renderChart = (title: string, config: Record<string, { label: string; color: string }>, chartType: 'line' | 'scatter', removeOutliers: boolean = false) => {
       const dataKeys = Object.keys(config);
       if (dataKeys.length === 0) return null;
+
+      const chartData = prepareChartData(economicData, removeOutliers);
 
       return (
         <Card key={title}>
@@ -179,6 +206,9 @@ export default function EconomicDashboard() {
                 )}
               </ResponsiveContainer>
             </ChartContainer>
+            {removeOutliers && (
+              <p className="text-sm text-gray-500 mt-2">Note: Data shown from 1996 onwards to exclude outlier values from earlier years.</p>
+            )}
           </CardContent>
         </Card>
       );
@@ -189,26 +219,26 @@ export default function EconomicDashboard() {
         {renderChart("GDP Growth Rates", {
           "Growth rate from a Real GDP": { label: "Real GDP Growth", color: "hsl(0, 70%, 50%)" },
           "Growth rate from a Real GDP per capita": { label: "Real GDP per Capita Growth", color: "hsl(120, 70%, 50%)" }
-        }, 'line')}
+        }, 'line', true)}
         {renderChart("Inflation Rate vs Minimum Wage Growth", {
-          "IPCA Inflation Rate (% Annual Variation)": { label: "Inflation Rate", color: "hsl(240, 70%, 50%)" },
-          "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(60, 70%, 50%)" }
-        }, 'line')}
+          "IPCA Inflation Rate (% Annual Variation)": { label: "Inflation Rate", color: "hsl(0, 70%, 50%)" },
+          "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(120, 70%, 50%)" }
+        }, 'line', true)}
         {renderChart("Exchange Rate vs Trade Balance Surplus Growth", {
-          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(300, 70%, 50%)" },
-          "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(180, 70%, 50%)" }
+          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(0, 70%, 50%)" },
+          "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(120, 70%, 50%)" }
         }, 'line')}
         {renderChart("Foreign Direct Investment vs Nominal GDP", {
-          "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(90, 70%, 50%)" },
-          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(30, 70%, 50%)" }
+          "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(0, 70%, 50%)" },
+          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(120, 70%, 50%)" }
         }, 'scatter')}
         {renderChart("Unemployment Rate vs Minimum Wage", {
-          "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(210, 70%, 50%)" },
-          "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(150, 70%, 50%)" }
+          "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(0, 70%, 50%)" },
+          "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(120, 70%, 50%)" }
         }, 'scatter')}
         {renderChart("Exchange Rate Growth vs Cost of Living", {
-          "Exchange Rate (January,/R$USD) growth": { label: "Exchange Rate Growth", color: "hsl(270, 70%, 50%)" },
-          "Yearly Cost of Living Index (ICV)(Avg. % Change)": { label: "Cost of Living Change", color: "hsl(330, 70%, 50%)" }
+          "Exchange Rate (January,/R$USD) growth": { label: "Exchange Rate Growth", color: "hsl(0, 70%, 50%)" },
+          "Yearly Cost of Living Index (ICV)(Avg. % Change)": { label: "Cost of Living Change", color: "hsl(120, 70%, 50%)" }
         }, 'line')}
       </div>
     )
