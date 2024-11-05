@@ -224,24 +224,24 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
           "Growth rate from a Real GDP per capita": { label: "Real GDP per Capita Growth", color: "hsl(120, 70%, 50%)" }
         }, 'line', true)}
         {renderChart("Inflation Rate vs Minimum Wage Growth", {
-          "IPCA Inflation Rate (% Annual Variation)": { label: "Inflation Rate", color: "hsl(240, 70%, 50%)" },
-          "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(60, 70%, 50%)" }
+          "IPCA Inflation Rate (% Annual Variation)": { label: "Inflation Rate", color: "hsl(0, 70%, 50%)" },
+          "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(120, 70%, 50%)" }
         }, 'line', true)}
         {renderChart("Exchange Rate vs Trade Balance Surplus Growth", {
-          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(300, 70%, 50%)" },
-          "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(180, 70%, 50%)" }
+          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(0, 70%, 50%)" },
+          "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(120, 70%, 50%)" }
         }, 'line')}
         {renderChart("Foreign Direct Investment vs Nominal GDP", {
-          "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(90, 70%, 50%)" },
-          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(30, 70%, 50%)" }
+          "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(0, 70%, 50%)" },
+          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(120, 70%, 50%)" }
         }, 'scatter')}
         {renderChart("Unemployment Rate vs Minimum Wage", {
-          "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(210, 70%, 50%)" },
-          "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(150, 70%, 50%)" }
+          "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(0, 70%, 50%)" },
+          "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(120, 70%, 50%)" }
         }, 'scatter')}
         {renderChart("Exchange Rate Growth vs Cost of Living", {
-          "Exchange Rate (January,/R$USD) growth": { label: "Exchange Rate Growth", color: "hsl(270, 70%, 50%)" },
-          "Yearly Cost of Living Index (ICV)(Avg. % Change)": { label: "Cost of Living Change", color: "hsl(330, 70%, 50%)" }
+          "Exchange Rate (January,/R$USD) growth": { label: "Exchange Rate Growth", color: "hsl(0, 70%, 50%)" },
+          "Yearly Cost of Living Index (ICV)(Avg. % Change)": { label: "Cost of Living Change", color: "hsl(120, 70%, 50%)" }
         }, 'line')}
       </div>
     )
