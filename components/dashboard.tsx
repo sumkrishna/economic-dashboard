@@ -118,7 +118,6 @@ export default function EconomicDashboard() {
   const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false) => {
     return data
       .filter(item => {
-        if (!removeOutliers) return true;
         const year = parseInt(item.Year);
         if (removeOutliers) {
             if (graphName === "GDP Growth Rates") {
