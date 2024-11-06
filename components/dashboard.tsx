@@ -324,6 +324,7 @@ export default function EconomicDashboard() {
                   View Graphs
                 </Button>
                 <footer className="mt-8 text-center text-sm text-gray-500">
+                  <br /> <br /> <br /> <br /> <br /> <br /> <br /> <br />
                   Data collection and Analysis by Isabella Carvalho<br />
                   For Research Fellowship at Avenues São Paulo <br /> <br /> <br /> <br />
                   Website by Sumanth Krishna
