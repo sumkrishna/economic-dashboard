@@ -49,6 +49,15 @@ const dataPoints: DataPoint[] = [
   { name: "Yearly Cost of Living Index (ICV)(Avg. % Change)", index: 13 }
 ]
 
+const comparativeGraphs = [
+  { title: "GDP Growth Rates", id: "gdp-growth" },
+  { title: "Inflation Rate vs Minimum Wage Growth", id: "inflation-wage" },
+  { title: "Exchange Rate vs Trade Balance Surplus Growth", id: "exchange-trade" },
+  { title: "Foreign Direct Investment vs Nominal GDP", id: "fdi-gdp" },
+  { title: "Unemployment Rate vs Minimum Wage", id: "unemployment-wage" },
+  // { title: "Exchange Rate Growth vs Cost of Living", id: "exchange-col" }
+]
+
 export default function EconomicDashboard() {
   const [selectedYear, setSelectedYear] = useState<string | null>(null)
   const [selectedPresident, setSelectedPresident] = useState<string | null>(null)
@@ -58,6 +67,7 @@ export default function EconomicDashboard() {
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState<'home' | 'dataset' | 'comparative' | 'graphs'>('home')
   const [selectedGraphs, setSelectedGraphs] = useState<string[]>([])
+  const [selectedComparativeGraphs, setSelectedComparativeGraphs] = useState<string[]>([])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -95,6 +105,9 @@ export default function EconomicDashboard() {
     if (page === 'graphs') {
       setSelectedGraphs([])
     }
+    if (page === 'comparative') {
+      setSelectedComparativeGraphs([])
+    }
   }
 
   const handleGraphToggle = (graphName: string) => {
@@ -102,6 +115,14 @@ export default function EconomicDashboard() {
       prev.includes(graphName)
         ? prev.filter(name => name !== graphName)
         : [...prev, graphName]
+    )
+  }
+
+  const handleComparativeGraphToggle = (graphId: string) => {
+    setSelectedComparativeGraphs(prev => 
+      prev.includes(graphId)
+        ? prev.filter(id => id !== graphId)
+        : [...prev, graphId]
     )
   }
 
@@ -115,46 +136,37 @@ export default function EconomicDashboard() {
     return yearMatch && presidentMatch
   })
 
-const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false) => {
-  return data
-    .filter(item => {
-      if (!removeOutliers) return true;
-      const year = parseInt(item.Year);
-      return !(
-        (year === 1994 || year === 1995) &&
-        (
-          item["Growth rate from a Real GDP"] !== undefined ||
-          item["IPCA Inflation Rate (% Annual Variation)"] !== undefined ||
-          item["Minimum Wage Growth Rate percentage"] !== undefined ||
-          item["Growth rate from a Real GDP per capita"] !== undefined ||
-          item["Trade Balance Surplus Growth Rate"] !== undefined ||
-          item["Exchange Rate (January,/R$USD) growth"] !== undefined
-        )
-      );
-    })
-    .map(item => ({
-      ...item,
-      "Nominal GDP (in Millions of R$)": item["Nominal GDP (in Millions of R$)"] / 1000,
-      "Nominal GDP per Capita (in R$)": typeof item["Nominal GDP per Capita (in R$)"] === 'string' 
-        ? parseFloat(item["Nominal GDP per Capita (in R$)"].replace(/\s/g, '').replace(',', '.'))
-        : item["Nominal GDP per Capita (in R$)"],
-      "Trade Balance Surplus Growth Rate": typeof item["Trade Balance Surplus Growth Rate"] === 'string'
-        ? parseFloat(item["Trade Balance Surplus Growth Rate"].replace(',', '.'))
-        : item["Trade Balance Surplus Growth Rate"],
-      "Minimum Wage (in R$)": typeof item["Minimum Wage (in R$)"] === 'string'
-        ? parseFloat(item["Minimum Wage (in R$)"].replace(/\s/g, '').replace('.', '').replace(',', '.'))
-        : item["Minimum Wage (in R$)"]
-    }))
-}
+  const prepareChartData = (data: EconomicData[]) => {
+    return data
+      .filter(item => parseInt(item.Year) >= 1996)
+      .map(item => ({
+        ...item,
+        "Nominal GDP (in Millions of R$)": item["Nominal GDP (in Millions of R$)"] / 1000,
+        "Nominal GDP per Capita (in R$)": typeof item["Nominal GDP per Capita (in R$)"] === 'string' 
+          ? parseFloat(item["Nominal GDP per Capita (in R$)"].replace(/\s/g, '').replace(',', '.'))
+          : item["Nominal GDP per Capita (in R$)"],
+        "Trade Balance Surplus Growth Rate": typeof item["Trade Balance Surplus Growth Rate"] === 'string'
+          ? parseFloat(item["Trade Balance Surplus Growth Rate"].replace(',', '.'))
+          : item["Trade Balance Surplus Growth Rate"],
+        "Minimum Wage (in R$)": typeof item["Minimum Wage (in R$)"] === 'string'
+          ? parseFloat(item["Minimum Wage (in R$)"].replace(/\s/g, '').replace('.', '').replace(',', '.'))
+          : item["Minimum Wage (in R$)"]
+      }))
+      .sort((a, b) => {
+        if (a["Minimum Wage (in R$)"] < b["Minimum Wage (in R$)"]) return -1;
+        if (a["Minimum Wage (in R$)"] > b["Minimum Wage (in R$)"]) return 1;
+        return 0;
+      });
+  }
 
   const renderComparativeGraphs = () => {
     const chartData = prepareChartData(economicData)
 
-    const renderChart = (title: string, config: Record<string, { label: string; color: string }>, chartType: 'line' | 'scatter', removeOutliers: boolean = false) => {
+    const renderChart = (title: string, config: Record<string, { label: string; color: string }>, chartType: 'line' | 'scatter', xAxisMaxDomain?: number, yAxisDomain?: [number, number]) => {
       const dataKeys = Object.keys(config);
       if (dataKeys.length === 0) return null;
 
-      const chartData = prepareChartData(economicData, removeOutliers);
+      const chartData = prepareChartData(economicData);
 
       return (
         <Card key={title}>
@@ -168,7 +180,7 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
                   key,
                   {
                     label: value?.label || key,
-                    color: value?.color || `hsl(${Math.random() * 360}, 70%, 50%)`,
+                    color: value?.color,
                   },
                 ])
               )}
@@ -178,15 +190,15 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
                 {chartType === 'line' ? (
                   <LineChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="Year" />
-                    <YAxis />
+                    <XAxis dataKey={dataKeys[0]} domain={xAxisMaxDomain ? [0, xAxisMaxDomain] : undefined} />
+                    <YAxis dataKey={dataKeys[1]} domain={yAxisDomain} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     {dataKeys.map((key) => (
                       <Line
                         key={key}
                         type="monotone"
                         dataKey={key}
-                        stroke={config[key]?.color || `hsl(${Math.random() * 360}, 70%, 50%)`}
+                        stroke={config[key]?.color}
                         name={config[key]?.label || key}
                         strokeWidth={2}
                       />
@@ -198,45 +210,60 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
                     <XAxis dataKey={dataKeys[0]} name={config[dataKeys[0]]?.label || dataKeys[0]} />
                     <YAxis dataKey={dataKeys[1]} name={config[dataKeys[1]]?.label || dataKeys[1]} />
                     <ChartTooltip cursor={{ strokeDasharray: '3 3' }} content={<ChartTooltipContent />} />
-                    <Scatter name={title} data={chartData} fill={config[dataKeys[0]]?.color || `hsl(${Math.random() * 360}, 70%, 50%)`} />
+                    <Scatter name={title} data={chartData} fill={config[dataKeys[0]]?.color} />
                   </ScatterChart>
                 )}
               </ResponsiveContainer>
             </ChartContainer>
-            {removeOutliers && (
-              <p className="text-sm text-gray-500 mt-2">Note: Data shown from 1996 onwards to exclude outlier values from earlier years.</p>
-            )}
+            <p className="text-sm text-gray-500 mt-2">Note: Data shown from 1996 onwards due to outlier data in 1994 and 1995.</p>
           </CardContent>
         </Card>
       );
     };
 
-    return (
-      <div className="space-y-8">
-        {renderChart("GDP Growth Rates", {
+    const graphs = [
+      {
+        id: "gdp-growth",
+        component: renderChart("GDP Growth Rates", {
+          "Year": { label: "Year", color: "hsl(0, 0%, 0%)" },
           "Growth rate from a Real GDP": { label: "Real GDP Growth", color: "hsl(0, 70%, 50%)" },
           "Growth rate from a Real GDP per capita": { label: "Real GDP per Capita Growth", color: "hsl(120, 70%, 50%)" }
-        }, 'line', true)}
-        {renderChart("Inflation Rate vs Minimum Wage Growth", {
-          "IPCA Inflation Rate (% Annual Variation)": { label: "Inflation Rate", color: "hsl(0, 70%, 50%)" },
-          "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(120, 70%, 50%)" }
-        }, 'line', true)}
-        {renderChart("Exchange Rate vs Trade Balance Surplus Growth", {
-          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(0, 70%, 50%)" },
-          "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(120, 70%, 50%)" }
-        }, 'line')}
-        {renderChart("Foreign Direct Investment vs Nominal GDP", {
-          "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(0, 70%, 50%)" },
-          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(120, 70%, 50%)" }
-        }, 'scatter')}
-        {renderChart("Unemployment Rate vs Minimum Wage", {
-          "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(0, 70%, 50%)" },
-          "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(120, 70%, 50%)" }
-        }, 'scatter')}
-        {renderChart("Exchange Rate Growth vs Cost of Living", {
-          "Exchange Rate (January,/R$USD) growth": { label: "Exchange Rate Growth", color: "hsl(0, 70%, 50%)" },
-          "Yearly Cost of Living Index (ICV)(Avg. % Change)": { label: "Cost of Living Change", color: "hsl(120, 70%, 50%)" }
-        }, 'line')}
+        }, 'line')
+      },
+      {
+        id: "inflation-wage",
+        component: renderChart("Inflation Rate vs Minimum Wage Growth", {
+          "Year": { label: "Year", color: "hsl(0, 0%, 0%)" },
+          "IPCA Inflation Rate (% Annual Variation)": { label: "Inflation Rate", color: "hsl(240, 70%, 50%)" },
+          "Minimum Wage Growth Rate percentage": { label: "Minimum Wage Growth", color: "hsl(60, 70%, 50%)" }
+        }, 'line', undefined, [0, 20])
+      },
+      {
+        id: "exchange-trade",
+        component: renderChart("Exchange Rate vs Trade Balance Surplus Growth", {
+          "Exchange Rate (January,R$/USD)": { label: "Exchange Rate", color:  "hsl(300, 70%, 50%)" },
+          "Trade Balance Surplus Growth Rate": { label: "Trade Balance Surplus Growth", color: "hsl(180, 70%, 50%)" }
+        }, 'line', 200)
+      },
+      {
+        id: "fdi-gdp",
+        component: renderChart("Foreign Direct Investment vs Nominal GDP", {
+          "Nominal GDP (in Millions of R$)": { label: "Nominal GDP (Billions of R$)", color: "hsl(90, 70%, 50%)" },
+          "Foreign Direct Investment (IED,in Billions of R$)": { label: "Foreign Direct Investment", color: "hsl(30, 70%, 50%)" }
+        }, 'line')
+      },
+      {
+        id: "unemployment-wage",
+        component: renderChart("Unemployment Rate vs Minimum Wage", {
+          "Minimum Wage (in R$)": { label: "Minimum Wage", color: "hsl(210, 70%, 50%)" },
+          "Annual Average Unemployment Rate (%)": { label: "Unemployment Rate", color: "hsl(150, 70%, 50%)" }
+        }, 'line')
+      }
+    ]
+
+    return (
+      <div className="space-y-8">
+        {graphs.filter(graph => selectedComparativeGraphs.includes(graph.id)).map(graph => graph.component)}
       </div>
     )
   }
@@ -264,9 +291,16 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
       </div>
       <div className="container mx-auto p-4">
         <Card className="w-full max-w-6xl mx-auto">
-          <CardHeader>
-            {currentPage === 'home' ? <CardTitle>Economic Data Analysis</CardTitle> : <CardTitle>Filter and View Data</CardTitle>}
-            {currentPage === 'home' ? <CardDescription>Explore and compare economic data</CardDescription> : <CardDescription>Select filters and data points to display</CardDescription>}
+          <CardHeader className="flex justify-between items-start">
+            <div>
+              {currentPage === 'home' ? <CardTitle>Economic Data Analysis</CardTitle> : <CardTitle>Filter and View Data</CardTitle>}
+              {currentPage === 'home' ? <CardDescription>Explore and compare economic data</CardDescription> : <CardDescription>Select filters and data points to display</CardDescription>}
+            </div>
+            {currentPage !== 'home' && (
+              <Button onClick={() => setCurrentPage('home')} className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none hover:bg-black transition-colors duration-300">
+                Back to Home
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {currentPage === 'home' && (
@@ -367,6 +401,19 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
             {currentPage === 'comparative' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Comparative Data View</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {comparativeGraphs.map(graph => (
+                    <Button
+                      key={graph.id}
+                      variant={selectedComparativeGraphs.includes(graph.id) ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handleComparativeGraphToggle(graph.id)}
+                      className="text-xs"
+                    >
+                      {graph.title}
+                    </Button>
+                  ))}
+                </div>
                 {renderComparativeGraphs()}
               </div>
             )}
@@ -427,13 +474,6 @@ const prepareChartData = (data: EconomicData[], removeOutliers: boolean = false)
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex justify-between">
-            {currentPage !== 'home' && (
-              <Button onClick={() => setCurrentPage('home')} className="bg-gradient-to-r from-blue-500 to-purple-600 text-white border-none hover:bg-black transition-colors duration-300">
-                Back to Home
-              </Button>
-            )}
-          </CardFooter>
         </Card>
       </div>
     </div>
