@@ -327,10 +327,11 @@ export default function EconomicDashboard() {
                   <br /> <br /> <br /> <br /> <br /> <br /> <br /> <br />
                   Data collection and Analysis by Isabella Carvalho<br />
                   For Research Fellowship at Avenues São Paulo <br /> <br /> <br /> <br />
-                  // Website by Sumanth Krishna
+                  
                 </footer>
               </div>
             )}
+            // Website by Sumanth Krishna
             {currentPage === 'dataset' && (
               <div className="space-y-4">
                 <div className="flex space-x-4 mb-4">
