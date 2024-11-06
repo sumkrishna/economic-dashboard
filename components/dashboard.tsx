@@ -327,7 +327,7 @@ export default function EconomicDashboard() {
                   <br /> <br /> <br /> <br /> <br /> <br /> <br /> <br />
                   Data collection and Analysis by Isabella Carvalho<br />
                   For Research Fellowship at Avenues São Paulo <br /> <br /> <br /> <br />
-                  Website by Sumanth Krishna
+                  // Website by Sumanth Krishna
                 </footer>
               </div>
             )}
