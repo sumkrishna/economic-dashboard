@@ -323,6 +323,10 @@ export default function EconomicDashboard() {
                 >
                   View Graphs
                 </Button>
+                <footer className="mt-8 text-center text-sm text-gray-500">
+                  Data collection and Analysis by Isabella Carvalho<br />
+                  Website by Sumanth Krishna for Research Fellowship at Avenues São Paulo
+                </footer>
               </div>
             )}
             {currentPage === 'dataset' && (
