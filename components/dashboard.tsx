@@ -325,7 +325,7 @@ export default function EconomicDashboard() {
                 </Button>
                 <footer className="mt-8 text-center text-sm text-gray-500">
                   Data collection and Analysis by Isabella Carvalho<br />
-                  Website by Sumanth Krishna for Research Fellowship at Avenues São Paulo
+                  Website by Sumanth Krishna <br /> for Research Fellowship at Avenues São Paulo
                 </footer>
               </div>
             )}
