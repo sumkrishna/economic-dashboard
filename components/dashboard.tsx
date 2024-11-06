@@ -331,7 +331,6 @@ export default function EconomicDashboard() {
                 </footer>
               </div>
             )}
-            // Website by Sumanth Krishna
             {currentPage === 'dataset' && (
               <div className="space-y-4">
                 <div className="flex space-x-4 mb-4">
